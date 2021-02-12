@@ -69,6 +69,22 @@ func indexFromNodeQuery(arg interface{}) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func indexFromServiceNode(raw interface{}) ([]byte, error) {
+	n, ok := raw.(*structs.ServiceNode)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type %T for structs.ServiceNode index", raw)
+	}
+
+	if n.Node == "" {
+		return nil, errMissingValueForIndex
+	}
+
+	var b indexBuilder
+	b.String(strings.ToLower(n.Node))
+	b.String(strings.ToLower(n.ServiceID))
+	return b.Bytes(), nil
+}
+
 func serviceIndexName(name string, _ *structs.EnterpriseMeta) string {
 	return fmt.Sprintf("service.%s", name)
 }
@@ -151,7 +167,7 @@ func catalogServiceKindMaxIndex(tx ReadTxn, ws memdb.WatchSet, kind structs.Serv
 }
 
 func catalogServiceList(tx ReadTxn, _ *structs.EnterpriseMeta, _ bool) (memdb.ResultIterator, error) {
-	return tx.Get("services", "id")
+	return tx.Get(tableServices, indexID)
 }
 
 func catalogServiceListByKind(tx ReadTxn, kind structs.ServiceKind, _ *structs.EnterpriseMeta) (memdb.ResultIterator, error) {
