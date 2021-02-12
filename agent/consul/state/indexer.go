@@ -30,6 +30,12 @@ type indexerMulti struct {
 	writeIndexMulti
 }
 
+type indexerSingleWithPrefix struct {
+	readIndex
+	writeIndex
+	prefixIndex
+}
+
 // readIndex implements memdb.Indexer. It exists so that a function can be used
 // to provide the interface.
 //
@@ -46,7 +52,7 @@ func (f readIndex) FromArgs(args ...interface{}) ([]byte, error) {
 
 var errMissingValueForIndex = fmt.Errorf("object is missing a value for this index")
 
-// writeIndex implements memdb.SingleIndexer. It is used so that a function
+// writeIndex implements memdb.SingleIndexer. It exists so that a function
 // can be used to provide this interface.
 //
 // Instead of a bool return value, writeIndex expects errMissingValueForIndex to
@@ -62,7 +68,7 @@ func (f writeIndex) FromObject(raw interface{}) (bool, []byte, error) {
 	return err == nil, v, err
 }
 
-// writeIndexMulti implements memdb.MultiIndexer. It is used so that a function
+// writeIndexMulti implements memdb.MultiIndexer. It exists so that a function
 // can be used to provide this interface.
 //
 // Instead of a bool return value, writeIndexMulti expects errMissingValueForIndex to
@@ -76,6 +82,17 @@ func (f writeIndexMulti) FromObject(raw interface{}) (bool, [][]byte, error) {
 		return false, nil, nil
 	}
 	return err == nil, v, err
+}
+
+// prefixIndex implements memdb.PrefixIndexer. It exists so that a function
+// can be used to provide this interface.
+type prefixIndex func(args interface{}) ([]byte, error)
+
+func (f prefixIndex) PrefixFromArgs(args ...interface{}) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("index supports only a single arg")
+	}
+	return f(args[0])
 }
 
 const null = "\x00"
