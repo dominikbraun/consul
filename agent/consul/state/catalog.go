@@ -700,7 +700,7 @@ func (s *Store) Services(ws memdb.WatchSet, entMeta *structs.EnterpriseMeta) (ui
 	idx := catalogServicesMaxIndex(tx, entMeta)
 
 	// List all the services.
-	services, err := catalogServiceList(tx, entMeta, false)
+	services, err := catalogServiceListNoWildcard(tx, entMeta)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed querying services: %s", err)
 	}
@@ -742,7 +742,7 @@ func (s *Store) ServiceList(ws memdb.WatchSet, entMeta *structs.EnterpriseMeta) 
 func serviceListTxn(tx ReadTxn, ws memdb.WatchSet, entMeta *structs.EnterpriseMeta) (uint64, structs.ServiceList, error) {
 	idx := catalogServicesMaxIndex(tx, entMeta)
 
-	services, err := catalogServiceList(tx, entMeta, true)
+	services, err := tx.Get(tableServices, indexID+"_prefix", entMeta)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed querying services: %s", err)
 	}
@@ -787,7 +787,7 @@ func (s *Store) ServicesByNodeMeta(ws memdb.WatchSet, filters map[string]string,
 
 	// We don't want to track an unlimited number of services, so we pull a
 	// top-level watch to use as a fallback.
-	allServices, err := catalogServiceList(tx, entMeta, false)
+	allServices, err := catalogServiceListNoWildcard(tx, entMeta)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed services lookup: %s", err)
 	}
@@ -1055,7 +1055,7 @@ func (s *Store) ServiceAddressNodes(ws memdb.WatchSet, address string, entMeta *
 	defer tx.Abort()
 
 	// List all the services.
-	services, err := catalogServiceList(tx, entMeta, true)
+	services, err := tx.Get(tableServices, indexID+"_prefix", entMeta)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed service lookup: %s", err)
 	}
@@ -2255,7 +2255,7 @@ func serviceDumpAllTxn(tx ReadTxn, ws memdb.WatchSet, entMeta *structs.Enterpris
 	// Get the table index
 	idx := catalogMaxIndexWatch(tx, ws, entMeta, true)
 
-	services, err := catalogServiceList(tx, entMeta, true)
+	services, err := tx.Get(tableServices, indexID+"_prefix", entMeta)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed service lookup: %s", err)
 	}
