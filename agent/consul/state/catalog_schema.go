@@ -18,13 +18,14 @@ const (
 	tableMeshTopology    = "mesh-topology"
 
 	indexID          = "id"
-	indexServiceName = "service"
+	indexService     = "service"
 	indexConnect     = "connect"
 	indexKind        = "kind"
 	indexStatus      = "status"
 	indexNodeService = "node_service"
 	indexUpstream    = "upstream"
 	indexDownstream  = "downstream"
+	indexGateway     = "gateway"
 )
 
 // nodesTableSchema returns a new table schema used for storing struct.Node.
@@ -92,8 +93,8 @@ func servicesTableSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
-			indexServiceName: {
-				Name:         indexServiceName,
+			indexService: {
+				Name:         indexService,
 				AllowMissing: true,
 				Unique:       false,
 				Indexer: &memdb.StringFieldIndex{
@@ -150,8 +151,8 @@ func checksTableSchema() *memdb.TableSchema {
 					Lowercase: false,
 				},
 			},
-			indexServiceName: {
-				Name:         indexServiceName,
+			indexService: {
+				Name:         indexService,
 				AllowMissing: true,
 				Unique:       false,
 				Indexer: &memdb.StringFieldIndex{
@@ -205,16 +206,16 @@ func gatewayServicesTableSchema() *memdb.TableSchema {
 					},
 				},
 			},
-			"gateway": {
-				Name:         "gateway",
+			indexGateway: {
+				Name:         indexGateway,
 				AllowMissing: false,
 				Unique:       false,
 				Indexer: &ServiceNameIndex{
 					Field: "Gateway",
 				},
 			},
-			"service": {
-				Name:         "service",
+			indexService: {
+				Name:         indexService,
 				AllowMissing: true,
 				Unique:       false,
 				Indexer: &ServiceNameIndex{
